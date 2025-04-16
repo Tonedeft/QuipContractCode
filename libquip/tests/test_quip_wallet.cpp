@@ -13,7 +13,7 @@ protected:
         mockClient_ = std::make_unique<MockEthereumClient>("https://sepolia.infura.io/v3/YOUR-PROJECT-ID", Chain::Sepolia);
         
         // Create a QuipWallet instance with the mock client
-        wallet_ = std::make_unique<QuipWallet>("https://sepolia.infura.io/v3/YOUR-PROJECT-ID", "0x1234567890123456789012345678901234567890");
+        wallet_ = std::make_unique<QuipWallet>(std::move(mockClient_), "0x1234567890123456789012345678901234567890");
     }
 
     std::unique_ptr<MockEthereumClient> mockClient_;
@@ -43,8 +43,10 @@ TEST_F(QuipWalletTest, DepositToWinternitz) {
     // Verify the RPC call
     EXPECT_EQ(mockClient_->getLastMethod(), "eth_sendRawTransaction");
     
+    // Get the raw transaction data and deserialize it
     auto params = mockClient_->getLastParams();
-    auto tx = params["params"][0];
+    std::string rawTx = params["params"][0].get<std::string>();
+    auto tx = mockClient_->deserializeTransaction(rawTx);
     
     // Verify transaction parameters
     EXPECT_EQ(tx["to"], "0x1234567890123456789012345678901234567890"); // Factory address
@@ -106,8 +108,10 @@ TEST_F(QuipWalletTest, TransferWithWinternitz) {
     // Verify the RPC call
     EXPECT_EQ(mockClient_->getLastMethod(), "eth_sendRawTransaction");
     
+    // Get the raw transaction data and deserialize it
     auto params = mockClient_->getLastParams();
-    auto tx = params["params"][0];
+    std::string rawTx = params["params"][0].get<std::string>();
+    auto tx = mockClient_->deserializeTransaction(rawTx);
     
     // Verify transaction parameters
     EXPECT_EQ(tx["to"], walletAddress);

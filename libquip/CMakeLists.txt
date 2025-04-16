@@ -15,20 +15,31 @@ find_package(web3 REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add source files
-add_library(quip SHARED
+add_library(quip
     src/quip_wallet.cpp
-    src/wots_plus.cpp
     src/ethereum_client.cpp
+    src/wots_plus.cpp
 )
 
-# Link libraries
-target_link_libraries(quip
+# Include directories
+target_include_directories(quip
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    Boost::system
-    Boost::filesystem
-    web3::web3
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${Boost_INCLUDE_DIRS}
+        ${nlohmann_json_INCLUDE_DIRS}
+)
+
+# Link dependencies
+target_link_libraries(quip
+    PUBLIC
+        Boost::system
+        nlohmann_json::nlohmann_json
+    PRIVATE
+        CURL::libcurl
+        OpenSSL::SSL
+        OpenSSL::Crypto
 )
 
 # Install rules

@@ -210,4 +210,52 @@ std::string EthereumClient::serializeTransaction(const nlohmann::json& tx) {
     return ss.str();
 }
 
+nlohmann::json EthereumClient::deserializeTransaction(const std::string& hexTx) {
+    // Remove the 0x prefix if present
+    std::string txData = hexTx;
+    if (txData.substr(0, 2) == "0x") {
+        txData = txData.substr(2);
+    }
+
+    // Calculate field lengths (in hex characters)
+    const size_t NONCE_LEN = 16;      // 8 bytes
+    const size_t GAS_PRICE_LEN = 16;  // 8 bytes
+    const size_t GAS_LIMIT_LEN = 16;  // 8 bytes
+    const size_t TO_LEN = 40;         // 20 bytes
+    const size_t VALUE_LEN = 32;      // 16 bytes
+    const size_t CHAIN_ID_LEN = 6;    // 3 bytes
+
+    // Create JSON object
+    nlohmann::json tx;
+
+    // Extract nonce (8 bytes)
+    tx["nonce"] = "0x" + txData.substr(0, NONCE_LEN);
+    txData = txData.substr(NONCE_LEN);
+
+    // Extract gas price (8 bytes)
+    tx["gasPrice"] = "0x" + txData.substr(0, GAS_PRICE_LEN);
+    txData = txData.substr(GAS_PRICE_LEN);
+
+    // Extract gas limit (8 bytes)
+    tx["gasLimit"] = "0x" + txData.substr(0, GAS_LIMIT_LEN);
+    txData = txData.substr(GAS_LIMIT_LEN);
+
+    // Extract to address (20 bytes)
+    tx["to"] = "0x" + txData.substr(0, TO_LEN);
+    txData = txData.substr(TO_LEN);
+
+    // Extract value (16 bytes)
+    tx["value"] = "0x" + txData.substr(0, VALUE_LEN);
+    txData = txData.substr(VALUE_LEN);
+
+    // The remaining data is the input data
+    tx["data"] = "0x" + txData.substr(0, txData.length() - CHAIN_ID_LEN);
+    txData = txData.substr(txData.length() - CHAIN_ID_LEN);
+
+    // Extract chain ID (3 bytes)
+    tx["chainId"] = "0x" + txData;
+
+    return tx;
+}
+
 } // namespace quip 

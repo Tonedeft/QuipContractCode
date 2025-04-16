@@ -9,7 +9,7 @@ namespace quip {
 
 class MockEthereumClient : public EthereumClient {
 public:
-    MockEthereumClient(const std::string& nodeUrl) : EthereumClient(nodeUrl) {
+    MockEthereumClient(const std::string& nodeUrl, Chain chain = Chain::Mainnet) : EthereumClient(nodeUrl, chain) {
         // Set up default responses
         defaultResponses_["eth_getTransactionCount"] = R"({
             "jsonrpc": "2.0",

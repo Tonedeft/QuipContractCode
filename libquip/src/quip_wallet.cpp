@@ -1,13 +1,12 @@
 #include "quip_wallet.hpp"
-#include "ethereum_client.hpp"
 #include "wots_plus.hpp"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace quip {
 
-QuipWallet::QuipWallet(const std::string& ethereumNodeUrl, const std::string& factoryAddress)
-    : ethClient_(std::make_unique<EthereumClient>(ethereumNodeUrl, Chain::Sepolia))
+QuipWallet::QuipWallet(std::unique_ptr<EthereumClient> ethClient, const std::string& factoryAddress)
+    : ethClient_(std::move(ethClient))
     , wotsPlus_(std::make_unique<WOTSPlus>())
     , factoryAddress_(factoryAddress) {
 }

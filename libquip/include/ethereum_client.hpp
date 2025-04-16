@@ -40,6 +40,20 @@ public:
     // Get the chain ID as a hex string
     std::string getChainId() const;
 
+    /**
+     * @brief Serialize a transaction to hex string
+     * @param tx The transaction to serialize
+     * @return The hex-encoded transaction string
+     */
+    std::string serializeTransaction(const nlohmann::json& tx);
+
+    /**
+     * @brief Deserialize a hex-encoded transaction string to JSON
+     * @param hexTx The hex-encoded transaction string
+     * @return The deserialized transaction as JSON
+     */
+    nlohmann::json deserializeTransaction(const std::string& hexTx);
+
 protected:
     // Make rpcCall virtual so it can be mocked in tests
     virtual nlohmann::json rpcCall(const std::string& method, const nlohmann::json& params);
@@ -57,7 +71,6 @@ private:
         uint64_t nonce,
         const std::string& gasPrice
     );
-    std::string serializeTransaction(const nlohmann::json& tx);
 };
 
 } // namespace quip 
