@@ -41,12 +41,12 @@ TEST_F(QuipWalletTest, DepositToWinternitz) {
     );
 
     // Verify the RPC call
-    EXPECT_EQ(mockClient_->getLastMethod(), "eth_sendRawTransaction");
+    EXPECT_EQ(wallet_->ethClient_->getLastMethod(), "eth_sendRawTransaction");
     
     // Get the raw transaction data and deserialize it
-    auto params = mockClient_->getLastParams();
+    auto params = wallet_->ethClient_->getLastParams();
     std::string rawTx = params["params"][0].get<std::string>();
-    auto tx = mockClient_->deserializeTransaction(rawTx);
+    auto tx = wallet_->ethClient_->deserializeTransaction(rawTx);
     
     // Verify transaction parameters
     EXPECT_EQ(tx["to"], "0x1234567890123456789012345678901234567890"); // Factory address
@@ -106,12 +106,12 @@ TEST_F(QuipWalletTest, TransferWithWinternitz) {
     );
 
     // Verify the RPC call
-    EXPECT_EQ(mockClient_->getLastMethod(), "eth_sendRawTransaction");
+    EXPECT_EQ(wallet_->ethClient_->getLastMethod(), "eth_sendRawTransaction");
     
     // Get the raw transaction data and deserialize it
-    auto params = mockClient_->getLastParams();
+    auto params = wallet_->ethClient_->getLastParams();
     std::string rawTx = params["params"][0].get<std::string>();
-    auto tx = mockClient_->deserializeTransaction(rawTx);
+    auto tx = wallet_->ethClient_->deserializeTransaction(rawTx);
     
     // Verify transaction parameters
     EXPECT_EQ(tx["to"], walletAddress);

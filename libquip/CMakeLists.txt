@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find required packages
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(nlohmann_json REQUIRED)
+find_package(CURL REQUIRED)
 
 # Add web3 library (you'll need to install this)
 find_package(web3 REQUIRED)

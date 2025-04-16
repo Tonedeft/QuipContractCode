@@ -1,10 +1,12 @@
 #include "ethereum_client.hpp"
+#include "rlp.hpp"
 #include <curl/curl.h>
 #include <openssl/ec.h>
 #include <openssl/obj_mac.h>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <boost/algorithm/hex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
 
@@ -180,81 +182,72 @@ std::string EthereumClient::signTransaction(
 }
 
 std::string EthereumClient::serializeTransaction(const nlohmann::json& tx) {
-    // Implement RLP encoding for the transaction
-    // This is a simplified version - in a real implementation, you'd need
-    // a proper RLP encoder
-    std::stringstream ss;
-    ss << "0x";
+    // Convert transaction fields to bytes
+    std::vector<std::vector<uint8_t>> items;
     
-    // Add nonce
-    ss << tx["nonce"].get<std::string>().substr(2);
+    // Nonce
+    items.push_back(RLP::hexToBytes(tx["nonce"].get<std::string>()));
     
-    // Add gas price
-    ss << tx["gasPrice"].get<std::string>().substr(2);
+    // Gas Price
+    items.push_back(RLP::hexToBytes(tx["gasPrice"].get<std::string>()));
     
-    // Add gas limit
-    ss << tx["gasLimit"].get<std::string>().substr(2);
+    // Gas Limit
+    items.push_back(RLP::hexToBytes(tx["gasLimit"].get<std::string>()));
     
-    // Add to address
-    ss << tx["to"].get<std::string>().substr(2);
+    // To Address
+    items.push_back(RLP::hexToBytes(tx["to"].get<std::string>()));
     
-    // Add value
-    ss << tx["value"].get<std::string>().substr(2);
+    // Value
+    items.push_back(RLP::hexToBytes(tx["value"].get<std::string>()));
     
-    // Add data
-    ss << tx["data"].get<std::string>().substr(2);
+    // Data
+    items.push_back(RLP::hexToBytes(tx["data"].get<std::string>()));
     
-    // Add chain ID
-    ss << tx["chainId"].get<std::string>().substr(2);
+    // Chain ID
+    items.push_back(RLP::hexToBytes(tx["chainId"].get<std::string>()));
     
-    return ss.str();
+    // RLP encode the list
+    std::vector<uint8_t> encoded = RLP::encodeList(items);
+    
+    // Convert to hex string
+    return RLP::bytesToHex(encoded);
 }
 
 nlohmann::json EthereumClient::deserializeTransaction(const std::string& hexTx) {
-    // Remove the 0x prefix if present
-    std::string txData = hexTx;
-    if (txData.substr(0, 2) == "0x") {
-        txData = txData.substr(2);
+    // Convert hex to bytes
+    std::vector<uint8_t> bytes = RLP::hexToBytes(hexTx);
+    
+    // Decode the RLP list
+    std::vector<std::vector<uint8_t>> items = RLP::decodeList(bytes);
+    
+    if (items.size() != 7) {
+        throw std::runtime_error("Invalid transaction: wrong number of fields");
     }
-
-    // Calculate field lengths (in hex characters)
-    const size_t NONCE_LEN = 16;      // 8 bytes
-    const size_t GAS_PRICE_LEN = 16;  // 8 bytes
-    const size_t GAS_LIMIT_LEN = 16;  // 8 bytes
-    const size_t TO_LEN = 40;         // 20 bytes
-    const size_t VALUE_LEN = 32;      // 16 bytes
-    const size_t CHAIN_ID_LEN = 6;    // 3 bytes
-
+    
     // Create JSON object
     nlohmann::json tx;
-
-    // Extract nonce (8 bytes)
-    tx["nonce"] = "0x" + txData.substr(0, NONCE_LEN);
-    txData = txData.substr(NONCE_LEN);
-
-    // Extract gas price (8 bytes)
-    tx["gasPrice"] = "0x" + txData.substr(0, GAS_PRICE_LEN);
-    txData = txData.substr(GAS_PRICE_LEN);
-
-    // Extract gas limit (8 bytes)
-    tx["gasLimit"] = "0x" + txData.substr(0, GAS_LIMIT_LEN);
-    txData = txData.substr(GAS_LIMIT_LEN);
-
-    // Extract to address (20 bytes)
-    tx["to"] = "0x" + txData.substr(0, TO_LEN);
-    txData = txData.substr(TO_LEN);
-
-    // Extract value (16 bytes)
-    tx["value"] = "0x" + txData.substr(0, VALUE_LEN);
-    txData = txData.substr(VALUE_LEN);
-
-    // The remaining data is the input data
-    tx["data"] = "0x" + txData.substr(0, txData.length() - CHAIN_ID_LEN);
-    txData = txData.substr(txData.length() - CHAIN_ID_LEN);
-
-    // Extract chain ID (3 bytes)
-    tx["chainId"] = "0x" + txData;
-
+    
+    // Nonce
+    tx["nonce"] = RLP::bytesToHex(items[0]);
+    
+    // Gas Price
+    tx["gasPrice"] = RLP::bytesToHex(items[1]);
+    
+    // Gas Limit
+    tx["gasLimit"] = RLP::bytesToHex(items[2]);
+    
+    // To Address
+    tx["to"] = RLP::bytesToHex(items[3]);
+    
+    // Value
+    tx["value"] = RLP::bytesToHex(items[4]);
+    
+    // Data
+    tx["data"] = RLP::bytesToHex(items[5]);
+    
+    // Chain ID
+    tx["chainId"] = RLP::bytesToHex(items[6]);
+    
     return tx;
 }
 
